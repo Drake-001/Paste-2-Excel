@@ -2,7 +2,6 @@ import openpyxl
 import os
 import re
 from datetime import datetime
-from openpyxl.styles import Font
 
 # Define the path and workbook/sheet details
 file_path = r"S:\AR Shared Job Files\Job Numbers.xlsx"
@@ -38,15 +37,14 @@ def parse_input(input_text):
     
     return data
 
-# Function to parse the date and return a datetime object
+# Function to format the date as "m/dd/yyyy"
 def format_date(date_str):
-    for fmt in ('%B %d, %Y', '%d/%m/%Y', '%m/%d/%Y'):
-        try:
-            return datetime.strptime(date_str.strip(), fmt)
-        except ValueError:
-            continue
-    # If all formats fail, return None
-    return None
+    try:
+        # Try to parse and format the date
+        date_obj = datetime.strptime(date_str, '%B %d, %Y')
+        return date_obj.strftime('%-m/%d/%Y')  # Format as "m/dd/yyyy"
+    except ValueError:
+        return date_str  # Return as-is if formatting fails
 
 # Function to extract the state abbreviation from the address
 def get_state_abbreviation(address):
@@ -66,10 +64,7 @@ def update_excel(input_text):
     
     ws = wb[sheet_name]
     
-    # Define the font style
-    font_style = Font(name='Times New Roman', size=14)
-    
-    # Find the first available row in column D
+    # Find the first available row in column A
     row = get_first_empty_row(ws, 'D')
     
     # Parse the input text
@@ -77,51 +72,24 @@ def update_excel(input_text):
     
     # Update the Excel sheet based on parsed data
     if "Job Name" in parsed_data:
-        cell = ws[f"C{row}"]
-        cell.value = parsed_data["Job Name"]
-        cell.font = font_style
-
+        ws[f"C{row}"] = parsed_data["Job Name"]
     if "Job Address" in parsed_data:
-        cell = ws[f"CD{row}"]
-        cell.value = parsed_data["Job Address"]
-        cell.font = font_style
-        
+        ws[f"CD{row}"] = parsed_data["Job Address"]
         state_abbreviation = get_state_abbreviation(parsed_data["Job Address"])
         if state_abbreviation:
-            cell_state = ws[f"E{row}"]
-            cell_state.value = state_abbreviation  # Insert state abbreviation in column E
-            cell_state.font = font_style
-
+            ws[f"E{row}"] = state_abbreviation  # Insert state abbreviation in column E
     if "GC Name" in parsed_data:
-        cell = ws[f"D{row}"]
-        cell.value = parsed_data["GC Name"]
-        cell.font = font_style
-
+        ws[f"D{row}"] = parsed_data["GC Name"]
     if "Architect" in parsed_data:
-        cell = ws[f"CE{row}"]
-        cell.value = parsed_data["Architect"]
-        cell.font = font_style
-
+        ws[f"CE{row}"] = parsed_data["Architect"]
     if "Job Contract Price" in parsed_data:
-        cell = ws[f"F{row}"]
-        cell.value = parsed_data["Job Contract Price"]
-        cell.font = font_style
-
+        ws[f"F{row}"] = parsed_data["Job Contract Price"]
     if "Retainage on Contract" in parsed_data:
-        cell = ws[f"CF{row}"]
-        cell.value = parsed_data["Retainage on Contract"]
-        cell.font = font_style
-
+        ws[f"CF{row}"] = parsed_data["Retainage on Contract"]
     if "Date Contract Awarded" in parsed_data:
-        date_obj = format_date(parsed_data["Date Contract Awarded"])
-        cell = ws[f"G{row}"]
-        cell.font = font_style
-        if date_obj:
-            cell.value = date_obj
-            cell.number_format = 'mm/dd/yyyy'  # Set number format
-        else:
-            cell.value = parsed_data["Date Contract Awarded"]
-
+        formatted_date = format_date(parsed_data["Date Contract Awarded"])
+        ws[f"G{row}"] = formatted_date  # Insert formatted date in column G
+    
     # Save the workbook
     wb.save(file_path)
     wb.close()
