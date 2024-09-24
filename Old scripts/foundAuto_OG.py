@@ -19,29 +19,28 @@ except KeyError as e:
     print(f"Error: {e}")
     exit(1)
 
-# Function to find the next unprocessed row starting from a given row
-def find_next_row(sheet, start_row=245):
-    max_row = sheet.max_row
-    for row in range(start_row, max_row + 1):
-        if sheet[f'A{row}'].value is not None and sheet[f'Z{row}'].value != 'Processed':
+# Function to find the last row with data in JN
+def find_last_row(sheet):
+    for row in range(sheet.max_row, 0, -1):
+        if sheet[f'A{row}'].value is not None:
             return row
     return None
 
-# Get the next unprocessed row starting from row 245
-next_row = find_next_row(jn_sheet, start_row=245)
+# Get the last row with data in JN
+last_row = find_last_row(jn_sheet)
 
-if next_row is None:
-    print("No unprocessed rows found starting from row 245.")
+if last_row is None:
+    print("No rows with data found.")
     exit(0)
 
 # Transfer data from JN to variables
-Bx = jn_sheet[f'B{next_row}'].value
-Cx = jn_sheet[f'C{next_row}'].value
-Dx = jn_sheet[f'D{next_row}'].value
-Ax = jn_sheet[f'A{next_row}'].value
-Ex = jn_sheet[f'E{next_row}'].value
-Fx = jn_sheet[f'F{next_row}'].value
-Gx = jn_sheet[f'G{next_row}'].value
+Bx = jn_sheet[f'B{last_row}'].value
+Cx = jn_sheet[f'C{last_row}'].value
+Dx = jn_sheet[f'D{last_row}'].value
+Ax = jn_sheet[f'A{last_row}'].value
+Ex = jn_sheet[f'E{last_row}'].value
+Fx = jn_sheet[f'F{last_row}'].value
+Gx = jn_sheet[f'G{last_row}'].value
 CAx = Fx * 0.9
 
 # Logic for Division (CBx)
@@ -99,7 +98,7 @@ def enter_data(data, position):
 
 # Enter data into the Foundation application
 enter_data(Bx, coordinates['Bx'])
-time.sleep(1)
+time.sleep(1)  # Adjust sleep time as needed
 enter_data(f"{Bx} {Cx}", coordinates['Bx_Cx'])
 time.sleep(1)
 enter_data(Dx, coordinates['Dx'])
@@ -125,7 +124,7 @@ time.sleep(1)
 
 # Original Estimated Cost
 try:
-    print(f"Calculated Estimated Cost: {CAx:.2f}")
+    print(f"Calculated Estimated Cost: {CAx:.2f}")  # Debugging print
     enter_data(f"{CAx:.2f}", coordinates['Fx_estimated_cost'])
 except Exception as e:
     print(f"Error calculating or entering estimated cost: {e}")
@@ -152,19 +151,13 @@ time.sleep(1)
 
 # Salesperson
 try:
-    print(f"Entering Salesperson: {CCx} at position {coordinates['CCx']}")
+    print(f"Entering Salesperson: {CCx} at position {coordinates['CCx']}")  # Debugging print
     enter_data(CCx, coordinates['CCx'])
 except Exception as e:
     print(f"Error entering salesperson: {e}")
 time.sleep(1)
 
 print("Data entry completed.")
-
-# Mark the row as processed
-jn_sheet[f'Z{next_row}'] = 'Processed'
-
-# Save the workbook
-jn_wb.save(jn_path)
 
 # Close workbook
 jn_wb.close()
